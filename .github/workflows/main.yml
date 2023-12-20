@@ -1,14 +1,24 @@
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   hello_world_job:
     runs-on: ubuntu-latest
     name: A job to say hello
     steps:
-      - uses: actions/checkout@v4
-      - id: foo
-        uses: actions/hello-world-composite-action@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Composite Action
+        id: hello-world-action
+        uses: ./.github/actions/my-composite-action
         with:
           who-to-greet: 'Mona the Octocat'
-      - run: echo random-number ${{ steps.foo.outputs.random-number }}
+
+      - name: Print Random Number and Action Path
+        run: |
+          echo "Random Number: ${{ steps.hello-world-action.outputs.random-number }}"
+          echo "Action Path: ${{ steps.hello-world-action.outputs.output }}"
         shell: bash
