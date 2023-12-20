@@ -15,7 +15,6 @@ outputs:
     description: 'The output greeting message'
 runs:
   using: 'composite'
-  shell: bash
   steps:
     - name: Set up environment
       run: echo "Preparing environment"
