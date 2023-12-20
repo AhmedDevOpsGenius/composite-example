@@ -1,0 +1,26 @@
+# .github/actions/my-composite-action/action.yml
+
+name: 'My Composite Action'
+description: 'A simple composite action'
+inputs:
+  greeting:
+    description: 'The greeting message'
+    required: true
+    default: 'Hello'
+  name:
+    description: 'The name to greet'
+    required: true
+outputs:
+  output-message:
+    description: 'The output greeting message'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up environment
+      run: echo "Preparing environment"
+
+    - name: Greet someone
+      id: greeting-step
+      run: |
+        echo "GreetingMessage=${{ inputs.greeting }} ${{ inputs.name }}"
+        echo "::set-output name=output-message::${{ inputs.greeting }} ${{ inputs.name }}"
