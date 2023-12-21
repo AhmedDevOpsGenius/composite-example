@@ -1,24 +1,29 @@
+name: Main Workflow
+
 on:
   push:
     branches:
       - main
 
 jobs:
-  hello_world_job:
+  build_and_push_image:
     runs-on: ubuntu-latest
-    name: A job to say hello
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: Use Composite Action
-        id: hello-world-action
-        uses: ./.github/actions/my-composite-action
+      - name: Call Build & Push Image Action
+        uses: ./.github/actions/build-and-push-image
         with:
-          who-to-greet: 'Mona the Octocat'
-
-      - name: Print Random Number and Action Path
-        run: |
-          echo "Random Number: ${{ steps.hello-world-action.outputs.random-number }}"
-          echo "Action Path: ${{ steps.hello-world-action.outputs.output }}"
-        shell: bash
+          environment: 'production'
+          dockerfile_path: './path/to/Dockerfile'
+          docker_context: './path/to/docker/context'
+          image_name: 'myimage'
+          image_tag: 'latest'
+          acr_build_platform: 'linux/amd64'
+          build_configuration: 'Release'
+          build_version_prefix: '1.0.0'
+          build_version: '1.0.0-alpha.1+build123'
+          build_assembly_file_version: '1.0.0.123'
+          build_full_version: '1.0.0-alpha.1+build123+additional_info'
