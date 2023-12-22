@@ -1,0 +1,115 @@
+name: 'Deploy Chart & Image'
+description: 'Deploy Helm chart and Docker image to Kubernetes'
+
+inputs:
+  environment:
+    description: 'Deployment Environment'
+    type: string
+    default: 'development'
+
+  release_name:
+    description: 'Name of the installed application in k8s'
+    type: string
+    required: true
+
+  chart_path:
+    description: 'Path to Helm chart'
+    type: string
+    required: true
+
+  helm_chart_version:
+    description: 'Override version for the Helm chart'
+    type: string
+    required: true
+
+  helm_app_version:
+    description: 'Override appVersion for the Helm chart'
+    type: string
+    required: true
+
+  image_name:
+    description: 'Name of the Docker image to build'
+    type: string
+    required: true
+
+  image_tag:
+    description: 'Tag of the Docker image to deploy'
+    type: string
+    required: true
+
+  node_selector_os:
+    description: 'OS node selector value'
+    type: string
+    required: true
+
+  target_namespace:
+    description: 'K8s Deployment Namespace'
+    type: string
+    required: true
+
+  ingress_url:
+    description: 'Ingress URL'
+    type: string
+    required: true
+
+  autoscaling_min_replicas:
+    description: 'Minimum number of replicas if the Helm chart has autoscaling enabled, otherwise ignored'
+    type: string
+    default: '1'
+
+  autoscaling_max_replicas:
+    description: 'Maximum number of replicas if the Helm chart has autoscaling enabled, otherwise ignored'
+    type: string
+    default: '1'
+
+  enable_ingress_auth_if_supported:
+    description: 'Enable basic password auth on ingress if the Helm chart supports it. Will be ignored if there is no support.'
+    type: boolean
+    default: false
+
+  force:
+    description: 'If true, then the release will be installed even if it has already been installed, and a rolling restart will run'
+    type: boolean
+    default: false
+
+runs:
+  using: 'composite'
+  steps:
+    - run: echo "Deployment Environment: ${{ inputs.environment }}"
+    - run: echo "Release Name: ${{ inputs.release_name }}"
+    - run: echo "Path to Helm Chart: ${{ inputs.chart_path }}"
+    - run: echo "Override Helm Chart Version: ${{ inputs.helm_chart_version }}"
+    - run: echo "Override Helm App Version: ${{ inputs.helm_app_version }}"
+    - run: echo "Name of Docker Image: ${{ inputs.image_name }}"
+    - run: echo "Tag of Docker Image: ${{ inputs.image_tag }}"
+    - run: echo "OS Node Selector Value: ${{ inputs.node_selector_os }}"
+    - run: echo "K8s Deployment Namespace: ${{ inputs.target_namespace }}"
+    - run: echo "Ingress URL: ${{ inputs.ingress_url }}"
+    - run: echo "Minimum Replicas: ${{ inputs.autoscaling_min_replicas }}"
+    - run: echo "Maximum Replicas: ${{ inputs.autoscaling_max_replicas }}"
+    - run: echo "Enable Ingress Auth: ${{ inputs.enable_ingress_auth_if_supported }}"
+    - run: echo "Force Deployment: ${{ inputs.force }}"
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+
+    - name: Deploy Helm Chart
+      run: |
+        if [ "${{ inputs.environment }}" == "development" ]; then
+          helm upgrade --install ${{ inputs.release_name }} ${{ inputs.chart_path }} --namespace ${{ inputs.target_namespace }} \
+          --set image.repository=${{ secrets.ACR_NAME }}.azurecr.io/${{ inputs.image_name }} \
+          --set image.tag=${{ inputs.image_tag }} \
+          --set ingress.url=${{ inputs.ingress_url }} \
+          --set autoscaling.minReplicas=${{ inputs.autoscaling_min_replicas }} \
+          --set autoscaling.maxReplicas=${{ inputs.autoscaling_max_replicas }} \
+          --set ingress.auth.enabled=${{ inputs.enable_ingress_auth_if_supported }} \
+          --set force=${{ inputs.force }}
+        else
+          helm upgrade --install ${{ inputs.release_name }} ${{ inputs.chart_path }} --namespace ${{ inputs.target_namespace }} \
+          --set image.repository=${{ secrets.ACR_NAME }}.azurecr.io/${{ inputs.image_name }} \
+          --set image.tag=${{ inputs.image_tag }} \
+          --set ingress.url=${{ inputs.ingress_url }} \
+          --set autoscaling.minReplicas=${{ inputs.autoscaling_min_replicas }} \
+          --set autoscaling.maxReplicas=${{ inputs.autoscaling_max_replicas }} \
+          --set ingress.auth.enabled=${{ inputs.enable_ingress_auth_if_supported }} \
+          --set force=${{ inputs.force }}
+        fi
